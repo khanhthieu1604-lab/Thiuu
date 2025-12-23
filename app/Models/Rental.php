@@ -9,31 +9,26 @@ class Rental extends Model
 {
     use HasFactory;
 
+    // Danh sách các cột được phép ghi dữ liệu vào
     protected $fillable = [
-        'user_id',
         'vehicle_id',
+        'user_id',
         'start_date',
         'end_date',
-        'total_days',
+        'total_days', // <--- Quan trọng: Phải có cái này mới lưu được số ngày
         'total_price',
-        'status',
+        'status'
     ];
 
-    // Đơn thuê thuộc về user
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    // Đơn thuê thuộc về xe
+    // Quan hệ: Đơn thuê thuộc về 1 chiếc xe
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
     }
 
-    // Thanh toán (morph)
-    public function payment()
+    // Quan hệ: Đơn thuê thuộc về 1 người dùng
+    public function user()
     {
-        return $this->morphOne(Payment::class, 'payable');
+        return $this->belongsTo(User::class);
     }
 }

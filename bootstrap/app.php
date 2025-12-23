@@ -10,9 +10,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        // Đăng ký middleware tại đây thay vì file Kernel.php cũ
+        // Ví dụ: $middleware->append(EnsureTokenIsValid::class);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
+    ->withExceptions(function (Exceptions $exceptions) {
+        // Cấu hình xử lý lỗi tại đây thay vì file Handler.php cũ
     })->create();

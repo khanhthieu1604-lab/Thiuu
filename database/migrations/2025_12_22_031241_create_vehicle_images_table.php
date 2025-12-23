@@ -9,28 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('vehicle_images', function (Blueprint $table) {
-            $table->id();
+public function up()
+{
+    Schema::create('vehicles', function (Blueprint $table) {
+        $table->id();
+        $table->string('name');
+        $table->string('brand');
+        $table->text('description')->nullable();
+        $table->decimal('rent_price_per_day', 10, 2);
+        $table->string('image')->nullable(); // Cột này sẽ chứa link ảnh
+        $table->string('status')->default('available');
+        $table->timestamps();
+    });
+}
 
-            // Quan hệ tới xe
-            $table->foreignId('vehicle_id')
-                  ->constrained('vehicles')
-                  ->cascadeOnDelete();
-
-            // Đường dẫn ảnh
-            $table->string('image_path');
-
-            $table->timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('vehicle_images');
-    }
+public function down(): void
+{
+    Schema::dropIfExists('vehicles'); // <--- SỬA LẠI TÊN BẢNG CHO ĐÚNG
+}
 };

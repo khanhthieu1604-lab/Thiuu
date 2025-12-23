@@ -1,9 +1,22 @@
 FROM php:8.2-fpm
 
+# Cài đặt các thư viện hệ thống cần thiết
 RUN apt-get update && apt-get install -y \
-    git curl unzip zip libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
+
+# Xóa cache apt để giảm dung lượng image
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Cài đặt PHP extensions (Laravel cần những cái này)
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+
+# Cài Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
