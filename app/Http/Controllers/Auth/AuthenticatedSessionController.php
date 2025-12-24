@@ -28,6 +28,14 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // --- CODE SỬA Ở ĐÂY ---
+        // Kiểm tra quyền của người dùng vừa đăng nhập
+        if (Auth::user()->role === 'admin') {
+            // Nếu là Ông chủ -> Vào trang quản trị
+            return redirect()->intended(route('admin.dashboard', absolute: false));
+        }
+
+        // Nếu là Khách -> Vào trang Welcome (Dashboard cá nhân)
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

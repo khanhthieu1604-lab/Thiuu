@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin Quản Trị',
             'email' => 'admin@gmail.com',
-            'password' => bcrypt('123456'), // Mật khẩu dễ nhớ để test
+            'password' => bcrypt('123456'),
             'role' => 'admin',
             'phone' => '0909000111',
             'address' => 'Hà Nội, Việt Nam'
@@ -37,8 +37,8 @@ class DatabaseSeeder extends Seeder
 
         // 3. Gọi các Seeder khác
         $this->call([
-            // VehicleCategorySeeder::class, // Tạm ẩn cái này vì ta đã bỏ bảng Category
-            VehicleSeeder::class,         // Tạo 120 xe mẫu
+            // VehicleCategorySeeder::class, // Tạm ẩn theo yêu cầu của bạn
+            VehicleSeeder::class,         // Đã bật lại dòng này để tạo 120 xe
         ]);
     }
 }
