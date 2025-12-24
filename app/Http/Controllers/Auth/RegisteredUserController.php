@@ -31,14 +31,14 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'customer', // Tạo user mặc định là khách
+            'role' => 'customer', // Mặc định là khách hàng
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        // QUAY LẠI ĐÚNG Ý BẠN: Chuyển hướng về trang Welcome (dashboard)
+        // Chuyển hướng về trang Welcome (dashboard)
         return redirect(route('dashboard', absolute: false));
     }
 }

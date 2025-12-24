@@ -10,10 +10,12 @@ class IsAdmin
 {
     public function handle(Request $request, Closure $next)
     {
+        // Kiểm tra role admin (dựa trên Model User bạn đã có)
         if (Auth::check() && Auth::user()->role === 'admin') {
             return $next($request);
         }
 
-        return redirect('/')->with('error', 'Bạn không có quyền truy cập vào khu vực quản trị.');
+        // Nếu không phải admin thì đẩy về trang chủ
+        return redirect('/')->with('error', 'Bạn không có quyền truy cập quản trị.');
     }
 }
