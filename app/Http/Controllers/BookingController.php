@@ -10,41 +10,75 @@ use Carbon\Carbon;
 
 class BookingController extends Controller
 {
-    // ... (Giữ nguyên hàm store cũ) ...
+    /**
+     * 1. Hiển thị form xác nhận đặt xe (MỚI THÊM)
+     * Route: /bookings/create/{vehicle_id}
+     */
+    public function create($vehicle_id)
+    {
+        $vehicle = Vehicle::findOrFail($vehicle_id);
+
+        // Kiểm tra kỹ: Nếu xe không sẵn sàng thì không cho vào trang đặt
+        if ($vehicle->status !== 'available') {
+            return redirect()->back()->with('error', 'Rất tiếc, xe này hiện không khả dụng.');
+        }
+
+        return view('bookings.create', compact('vehicle'));
+    }
+
+    /**
+     * 2. Xử lý lưu đơn đặt xe vào CSDL
+     * Route: POST /bookings/store
+     */
     public function store(Request $request)
     {
-        // ... (Code cũ giữ nguyên) ...
         $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date'   => 'required|date|after:start_date',
+        ], [
+            'start_date.after_or_equal' => 'Ngày nhận xe không được chọn trong quá khứ.',
+            'end_date.after'            => 'Ngày trả xe phải sau ngày nhận xe.',
         ]);
 
         $vehicle = Vehicle::findOrFail($request->vehicle_id);
-        $days = Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) ?: 1;
+
+        // Tính toán số ngày và tổng tiền
+        $start = Carbon::parse($request->start_date);
+        $end   = Carbon::parse($request->end_date);
+        $days  = $start->diffInDays($end);
+        
+        // Nếu khách thuê sáng -> chiều trả trong ngày thì tính là 1 ngày
+        if ($days < 1) $days = 1; 
+
         $totalPrice = $days * $vehicle->rent_price_per_day;
 
+        // Tạo đơn đặt xe
         Booking::create([
             'user_id'     => Auth::id(),
             'vehicle_id'  => $vehicle->id,
             'start_date'  => $request->start_date,
             'end_date'    => $request->end_date,
             'total_price' => $totalPrice,
-            'status'      => 'pending',
+            'status'      => 'pending', // Mặc định là chờ duyệt
             'note'        => $request->note,
         ]);
 
-        return redirect()->route('bookings.history') // Sửa redirect về trang lịch sử
-                         ->with('success', 'Đặt xe thành công! Vui lòng chờ xác nhận.');
+        // Chuyển hướng về trang lịch sử kèm thông báo
+        return redirect()->route('bookings.history')
+                         ->with('success', 'Đặt xe thành công! Vui lòng chờ Admin xác nhận.');
     }
 
-    // ==> MỚI: Xem lịch sử đặt xe của tôi
+    /**
+     * 3. Xem lịch sử đặt xe của tôi
+     * Route: /bookings/history
+     */
     public function history()
     {
         // Lấy danh sách booking của user đang đăng nhập
         $bookings = Booking::with('vehicle')
                            ->where('user_id', Auth::id())
-                           ->latest()
+                           ->latest() // Đơn mới nhất lên đầu
                            ->paginate(5);
 
         return view('bookings.history', compact('bookings'));

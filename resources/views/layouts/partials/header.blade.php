@@ -1,31 +1,79 @@
-<header class="fixed w-full top-0 z-50 transition-all duration-300 bg-dark-950/90 backdrop-blur-md border-b border-white/5">
-    <div class="container mx-auto px-4 h-16 flex items-center justify-between"> <a href="{{ url('/') }}" class="flex items-center gap-2 group">
-            <div class="w-8 h-8 border border-gold-500 rounded-sm flex items-center justify-center text-gold-500 font-bold text-lg group-hover:bg-gold-500 group-hover:text-dark-950 transition duration-300">
-                T
-            </div>
-            <div class="flex flex-col">
-                <h1 class="font-bold text-base text-white uppercase tracking-widest leading-none group-hover:text-gold-500 transition">Thiuu</h1>
-                <span class="text-[8px] text-gray-500 uppercase tracking-[0.3em]">Car Rental</span>
-            </div>
-        </a>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'Thiuu Rental') }}</title>
+    <link rel="icon" href="{{ asset('images/icon.png') }}" type="image/png">
+    
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=roboto:300,400,500,700|playfair-display:700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .font-heading { font-family: 'Playfair Display', serif; }
+        [x-cloak] { display: none !important; }
+    </style>
 
-        <nav class="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-widest">
-            <a href="{{ url('/') }}" class="{{ request()->is('/') ? 'text-gold-500' : 'text-gray-400 hover:text-white' }} transition py-2">Trang chủ</a>
-            <a href="{{ route('vehicles.index') }}" class="{{ request()->routeIs('vehicles.*') ? 'text-gold-500' : 'text-gray-400 hover:text-white' }} transition py-2">Danh sách xe</a>
-            <a href="{{ url('/pricing') }}" class="text-gray-400 hover:text-white transition py-2">Dịch vụ</a>
-            <a href="{{ url('/contact') }}" class="text-gray-400 hover:text-white transition py-2">Liên hệ</a>
-        </nav>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 flex flex-col min-h-screen transition-colors duration-300">
 
-        <div class="flex items-center gap-3">
-            @auth
-                <a href="{{ url('/dashboard') }}" class="text-xs font-bold text-white border border-gray-700 px-4 py-2 rounded hover:border-gold-500 hover:text-gold-500 transition uppercase tracking-wider">
-                    Dashboard
-                </a>
-            @else
-                <a href="{{ route('login') }}" class="text-xs font-bold text-gray-400 hover:text-white uppercase transition tracking-wider">Login</a>
-                <span class="w-[1px] h-3 bg-gray-700"></span>
-                <a href="{{ route('register') }}" class="text-xs font-bold text-gold-500 hover:text-gold-400 uppercase transition tracking-wider">Register</a>
-            @endauth
-        </div>
-    </div>
-</header>
+    @include('layouts.partials.header')
+
+    <main class="flex-grow">
+        @if(isset($slot) && $slot->isNotEmpty())
+            {{ $slot }}
+        @else
+            @yield('content')
+        @endif
+    </main>
+
+    @include('layouts.partials.footer')
+
+    <script>
+        var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        if (document.documentElement.classList.contains('dark')) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        var themeToggleBtn = document.getElementById('theme-toggle');
+        if(themeToggleBtn){
+            themeToggleBtn.addEventListener('click', function() {
+                themeToggleDarkIcon.classList.toggle('hidden');
+                themeToggleLightIcon.classList.toggle('hidden');
+                if (localStorage.getItem('color-theme')) {
+                    if (localStorage.getItem('color-theme') === 'light') {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    }
+                } else {
+                    if (document.documentElement.classList.contains('dark')) {
+                        document.documentElement.classList.remove('dark');
+                        localStorage.setItem('color-theme', 'light');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        localStorage.setItem('color-theme', 'dark');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

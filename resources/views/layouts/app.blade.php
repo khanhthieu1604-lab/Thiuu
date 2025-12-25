@@ -1,4 +1,6 @@
+
 <!DOCTYPE html>
+
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
@@ -39,9 +41,9 @@
             <nav class="hidden md:flex items-center space-x-8 font-bold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wide">
                 <a href="{{ route('home') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2 {{ request()->routeIs('home') ? 'text-blue-700 border-b-2 border-blue-700' : '' }}">Trang chủ</a>
                 
-                <a href="{{ route('vehicles.index') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2 {{ request()->routeIs('vehicles.index') ? 'text-blue-700 border-b-2 border-blue-700' : '' }}">Đội xe</a>
+                <a href="{{ route('vehicles.index') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2 {{ request()->routeIs('vehicles.index') ? 'text-blue-700 border-b-2 border-blue-700' : '' }}">Danh sách Xe</a>
                 
-                <a href="#" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2">Dịch vụ</a>
+                <a href="{{ route('services') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2">Dịch vụ</a>
             </nav>
 
             <div class="flex items-center gap-3">
@@ -108,19 +110,7 @@
     </main>
 
     <footer class="bg-gray-900 dark:bg-black text-gray-300 pt-12 pb-8 mt-auto border-t-4 border-yellow-500 transition-colors duration-300">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <a href="{{ route('home') }}">
-                        <img src="{{ asset('images/logo.png') }}" style="height: 40px; width: auto;" class="mb-4 bg-white p-1 rounded"> 
-                    </a>
-                    <p class="text-sm leading-relaxed mb-4 text-gray-400">Đơn vị cung cấp dịch vụ cho thuê xe uy tín, chất lượng hàng đầu.</p>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
-                &copy; {{ date('Y') }} Thiuu Car Rental. All rights reserved.
-            </div>
-        </div>
+        @include('layouts.partials.footer')
     </footer>
 
     <script>

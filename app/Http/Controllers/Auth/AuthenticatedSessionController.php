@@ -21,8 +21,8 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        // YÊU CẦU CỦA BẠN: Cả Admin và User đều vào trang Welcome trước
-        return redirect()->intended(route('welcome', absolute: false));
+        // SỬA: Chuyển hướng về route 'home' (trang chủ/welcome) thay vì dashboard
+        return redirect()->intended(route('home', absolute: false));
     }
 
     public function destroy(Request $request): RedirectResponse
