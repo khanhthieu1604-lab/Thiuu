@@ -1,76 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="bg-gray-100 py-4 border-b border-gray-200">
-    <div class="container mx-auto px-4">
-        <ul class="flex items-center text-sm text-gray-500">
-            <li><a href="{{ route('home') }}" class="hover:text-blue-800"><i class="fa-solid fa-house"></i></a></li>
-            <li class="mx-2">/</li>
-            <li><a href="{{ route('vehicles.index') }}" class="hover:text-blue-800">Danh sách xe</a></li>
-            <li class="mx-2">/</li>
-            <li class="text-blue-800 font-bold truncate">{{ $vehicle->name }}</li>
-        </ul>
-    </div>
-</div>
-
-<div class="container mx-auto px-4 py-10">
-    <div class="flex flex-col lg:flex-row gap-8">
-        
-        <div class="lg:w-2/3">
-            <div class="block lg:hidden mb-6">
-                <h1 class="text-2xl font-bold text-gray-900 font-heading mb-2">{{ $vehicle->name }}</h1>
-                <div class="text-xl text-blue-800 font-bold">{{ number_format($vehicle->rent_price_per_day) }}đ <span class="text-sm text-gray-500 font-normal">/ngày</span></div>
-            </div>
-
-            <div class="bg-white p-2 rounded-lg shadow-sm border border-gray-200 mb-8 overflow-hidden">
-                @if($vehicle->image)
-                    <img src="{{ asset($vehicle->image) }}" class="w-full h-auto rounded object-cover hover:scale-105 transition duration-500 cursor-pointer">
-                @else
-                    <div class="w-full h-96 bg-gray-100 flex items-center justify-center text-gray-400">
-                        <div class="text-center">
-                            <i class="fa-solid fa-image text-6xl mb-2"></i>
-                            <p>Chưa có hình ảnh</p>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8 mb-8">
-                <h3 class="text-lg font-bold text-gray-900 mb-6 font-heading border-b border-gray-100 pb-2 uppercase tracking-wide">
-                    <i class="fa-solid fa-circle-info text-blue-800 mr-2"></i> Thông số xe
-                </h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div class="text-center p-4 bg-gray-50 rounded border border-gray-100">
-                        <i class="fa-solid fa-car text-2xl text-blue-800 mb-2"></i>
-                        <span class="block text-xs text-gray-500 uppercase font-bold mb-1">Thương hiệu</span>
-                        <span class="font-bold text-gray-900">{{ $vehicle->brand }}</span>
-                    </div>
-                    <div class="text-center p-4 bg-gray-50 rounded border border-gray-100">
-                        <i class="fa-solid fa-user-group text-2xl text-blue-800 mb-2"></i>
-                        <span class="block text-xs text-gray-500 uppercase font-bold mb-1">Số chỗ</span>
-                        <span class="font-bold text-gray-900">5 Chỗ</span> </div>
-                    <div class="text-center p-4 bg-gray-50 rounded border border-gray-100">
-                        <i class="fa-solid fa-gas-pump text-2xl text-blue-800 mb-2"></i>
-                        <span class="block text-xs text-gray-500 uppercase font-bold mb-1">Nhiên liệu</span>
-                        <span class="font-bold text-gray-900">Xăng</span> </div>
-                    <div class="text-center p-4 bg-gray-50 rounded border border-gray-100">
-                        <i class="fa-solid fa-gear text-2xl text-blue-800 mb-2"></i>
-                        <span class="block text-xs text-gray-500 uppercase font-bold mb-1">Hộp số</span>
-                        <span class="font-bold text-gray-900">Tự động</span> </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8">
-                <h3 class="text-lg font-bold text-gray-900 mb-4 font-heading border-b border-gray-100 pb-2 uppercase tracking-wide">
-                    <i class="fa-solid fa-align-left text-blue-800 mr-2"></i> Mô tả chi tiết
-                </h3>
-                <div class="prose max-w-none text-gray-600 leading-relaxed text-justify">
-                    <p>{{ $vehicle->description ?? 'Hiện chưa có mô tả chi tiết cho dòng xe này. Xe được cam kết đời mới, vệ sinh sạch sẽ và bảo dưỡng định kỳ trước khi giao cho khách hàng.' }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="lg:w-1/3">
+<div class="lg:w-1/3">
             <div class="sticky top-24 space-y-6">
                 
                 <div class="bg-white rounded-lg shadow-lg border-t-4 border-yellow-500 p-6">
@@ -98,8 +26,9 @@
                     @endif
 
                     @if($vehicle->status == 'available')
+                        {{-- LOGIC: Nếu đã đăng nhập thì hiện Form, chưa thì chỉ hiện chữ --}}
                         @auth
-                            <form action="{{ route('booking.store') }}" method="POST">
+                            <form action="{{ route('rentals.store') }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
                                 
@@ -124,17 +53,15 @@
                                 <p class="text-xs text-gray-500 mt-2 text-center">Chưa cần thanh toán ngay.</p>
                             </form>
                         @else
-                            <div class="text-center py-4">
-                                <p class="text-gray-600 mb-4 text-sm">Vui lòng đăng nhập để thực hiện đặt xe.</p>
-                                <a href="{{ route('login') }}" class="block w-full text-center bg-yellow-500 hover:bg-yellow-400 text-blue-900 font-bold py-3 rounded uppercase transition shadow">
-                                    Đăng nhập ngay
-                                </a>
-                                <div class="mt-3 text-sm">
-                                    Chưa có tài khoản? <a href="{{ route('register') }}" class="text-blue-700 font-bold hover:underline">Đăng ký</a>
-                                </div>
+                            {{-- KHÁCH VÃNG LAI: Chỉ hiện thông báo text đơn giản --}}
+                            <div class="text-center py-6 bg-gray-50 rounded border border-gray-100 px-4">
+                                <p class="text-gray-500 italic text-sm">
+                                    <i class="fa-solid fa-lock mr-1"></i> Vui lòng đăng nhập để đặt xe này.
+                                </p>
                             </div>
                         @endauth
                     @else
+                        {{-- XE KHÔNG SẴN SÀNG --}}
                         <div class="bg-gray-100 p-6 text-center rounded border border-gray-200">
                             <i class="fa-solid fa-ban text-4xl text-gray-400 mb-3"></i>
                             <h3 class="font-bold text-gray-600">Tạm thời hết xe</h3>
@@ -150,6 +77,7 @@
                     </div>
                 </div>
 
+                {{-- Phần cam kết dịch vụ (giữ nguyên) --}}
                 <div class="bg-blue-50 rounded-lg border border-blue-100 p-5">
                     <h4 class="font-bold text-blue-900 mb-3 flex items-center text-sm uppercase tracking-wide">
                         <i class="fa-solid fa-shield-halved mr-2"></i> Cam kết dịch vụ
@@ -171,6 +99,3 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-@endsection

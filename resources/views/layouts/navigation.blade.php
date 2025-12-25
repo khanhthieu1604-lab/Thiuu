@@ -3,7 +3,7 @@
         <div class="flex justify-between h-20">
             <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('welcome') }}" class="flex items-center gap-2 group">
+                    <a href="{{ route('home') }}" class="flex items-center gap-2 group">
                         <span class="text-xl font-bold tracking-widest uppercase font-serif">Thiuu<span class="font-light text-gray-400">Cars</span></span>
                     </a>
                 </div>
@@ -83,7 +83,7 @@
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-300">
                     {{ __('Dashboard') }}
-                </x-nav-link>
+                </x-responsive-nav-link>
             @endauth
         </div>
 
