@@ -4,31 +4,44 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\VehicleManagerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\RentalController;
 use Illuminate\Support\Facades\Route;
 
-// 1. TRANG CHỦ (Giao diện Welcome Dark Mode)
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+// --- 1. KHU VỰC CÔNG KHAI (KHÁCH VÃNG LAI) ---
 
-// 2. DASHBOARD (Giao diện User Dark Mode)
-Route::get('/dashboard', function () {
-    return view('dashboard'); 
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Trang chủ: Gọi hàm home() để lấy dữ liệu xe mới nhất
+Route::get('/', [VehicleController::class, 'home'])->name('welcome');
 
-// 3. DANH SÁCH XE (Trang xem sản phẩm)
+// Danh sách xe & Chi tiết xe: Ai cũng xem được
 Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+Route::get('/vehicles/{id}', [VehicleController::class, 'show'])->name('vehicles.show');
 
-// 4. PROFILE
-Route::middleware('auth')->group(function () {
+
+// --- 2. KHU VỰC ĐĂNG NHẬP (USER & MEMBER) ---
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // Dashboard cá nhân
+    Route::get('/dashboard', function () {
+        return view('dashboard'); 
+    })->name('dashboard');
+
+    // Chức năng Đặt xe (Booking) - Chỉ dành cho người đã Login
+    Route::get('/rentals/create/{vehicle_id}', [RentalController::class, 'create'])->name('rentals.create');
+    Route::post('/rentals/store', [RentalController::class, 'store'])->name('rentals.store');
+
+    // Quản lý Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// 5. ADMIN AREA
+
+// --- 3. KHU VỰC QUẢN TRỊ (ADMIN & MASTER) ---
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard thống kê
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Quản lý xe (Thêm/Sửa/Xóa)
     Route::get('/vehicles', [VehicleManagerController::class, 'index'])->name('vehicles.index');
     Route::get('/vehicles/create', [VehicleManagerController::class, 'create'])->name('vehicles.create');
     Route::post('/vehicles/store', [VehicleManagerController::class, 'store'])->name('vehicles.store');

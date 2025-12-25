@@ -3,7 +3,7 @@
         <div class="flex justify-between h-20">
             <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('vehicles.index') }}" class="flex items-center gap-2 group">
+                    <a href="{{ route('welcome') }}" class="flex items-center gap-2 group">
                         <span class="text-xl font-bold tracking-widest uppercase font-serif">Thiuu<span class="font-light text-gray-400">Cars</span></span>
                     </a>
                 </div>
@@ -14,6 +14,10 @@
                     </x-nav-link>
                     
                     @auth
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-300 hover:text-white border-transparent hover:border-white transition pb-1">
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
+
                         @if(Auth::user()->role === 'admin')
                             <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')" class="text-gray-300 hover:text-white border-transparent hover:border-white transition pb-1">
                                 {{ __('Quản trị') }}
@@ -55,13 +59,13 @@
                 @else
                     <div class="space-x-4">
                         <a href="{{ route('login') }}" class="text-sm uppercase tracking-wide text-gray-300 hover:text-white transition">Đăng nhập</a>
-                        <a href="{{ route('register') }}" class="text-sm uppercase tracking-wide px-4 py-2 bg-white text-black font-bold hover:bg-gray-200 transition">Đăng ký</a>
+                        <a href="{{ route('register') }}" class="text-sm uppercase tracking-wide px-4 py-2 bg-white text-black font-bold hover:bg-gray-200 transition shadow-sm">Đăng ký</a>
                     </div>
                 @endauth
             </div>
 
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white focus:outline-none transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -76,6 +80,11 @@
             <x-responsive-nav-link :href="route('vehicles.index')" :active="request()->routeIs('vehicles.index')" class="text-gray-300">
                 {{ __('Showroom') }}
             </x-responsive-nav-link>
+            @auth
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-gray-300">
+                    {{ __('Dashboard') }}
+                </x-nav-link>
+            @endauth
         </div>
 
         <div class="pt-4 pb-1 border-t border-gray-800">
@@ -92,7 +101,7 @@
                     </form>
                 </div>
             @else
-                <div class="mt-3 space-y-1 px-4">
+                <div class="mt-3 space-y-1 px-4 pb-4">
                     <a href="{{ route('login') }}" class="block text-gray-300 py-2">Đăng nhập</a>
                     <a href="{{ route('register') }}" class="block text-gray-300 py-2">Đăng ký</a>
                 </div>

@@ -4,41 +4,40 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // 1. Tạo tài khoản ADMIN (Ông chủ)
+        // 1. TÀI KHOẢN MASTER (Quyền lực nhất - Tạo được Admin)
         User::factory()->create([
-            'name' => 'Admin Quản Trị',
+            'name' => 'MASTER SYSTEM',
+            'email' => 'master@gmail.com',
+            'password' => bcrypt('123456'),
+            'role' => 'master', // Role đặc biệt
+            'phone' => '0999999999',
+            'address' => 'Trụ sở chính'
+        ]);
+
+        // 2. TÀI KHOẢN ADMIN (Quản lý xe, đơn hàng - KHÔNG tạo được admin khác)
+        User::factory()->create([
+            'name' => 'Quản Lý Chi Nhánh 1',
             'email' => 'admin@gmail.com',
             'password' => bcrypt('123456'),
             'role' => 'admin',
-            'phone' => '0909000111',
-            'address' => 'Hà Nội, Việt Nam'
+            'phone' => '0988888888',
+            'address' => 'Hà Nội'
         ]);
 
-        // 2. Tạo tài khoản KHÁCH HÀNG (Người thuê xe)
+        // 3. KHÁCH HÀNG
         User::factory()->create([
-            'name' => 'Khách Hàng Vip',
-            'email' => 'khach@gmail.com',
+            'name' => 'Khách Hàng Thân Thiết',
+            'email' => 'user@gmail.com',
             'password' => bcrypt('123456'),
             'role' => 'customer',
-            'phone' => '0909000222',
-            'address' => 'TP.HCM, Việt Nam'
         ]);
 
-        // 3. Gọi các Seeder khác
-        $this->call([
-            // VehicleCategorySeeder::class, // Tạm ẩn theo yêu cầu của bạn
-            VehicleSeeder::class,         // Đã bật lại dòng này để tạo 120 xe
-        ]);
+        // Gọi seeder xe
+        $this->call(VehicleSeeder::class);
     }
 }

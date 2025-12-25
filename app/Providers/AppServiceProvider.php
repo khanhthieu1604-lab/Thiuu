@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator; // <--- DÒNG 1: Thêm cái này
+use Illuminate\Pagination\Paginator; // Giữ nguyên dòng này
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,6 +14,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Paginator::useBootstrapFive(); // <--- DÒNG 2: Thêm cái này
+        // ĐỔI DÒNG NÀY: Từ useBootstrapFive() sang useTailwind()
+        Paginator::useTailwind(); 
     }
 }

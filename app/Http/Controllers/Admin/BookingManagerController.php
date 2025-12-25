@@ -8,32 +8,34 @@ use Illuminate\Http\Request;
 
 class BookingManagerController extends Controller
 {
-    // 1. Xem danh sách đơn hàng
+    /**
+     * Hiển thị danh sách đơn thuê xe
+     */
     public function index()
     {
-        // Lấy đơn mới nhất lên đầu, kèm thông tin User và Vehicle
-        $bookings = Booking::with(['user', 'vehicle'])->latest()->paginate(10);
+        // Sử dụng eager loading (with) để tối ưu truy vấn SQL
+        $bookings = Booking::with(['user', 'vehicle'])
+            ->latest()
+            ->paginate(15);
+
         return view('admin.bookings.index', compact('bookings'));
     }
 
-    // 2. Cập nhật trạng thái đơn (Duyệt/Hủy)
-    public function update(Request $request, $id)
+    /**
+     * Cập nhật trạng thái đơn hàng (Duyệt/Hủy)
+     */
+    public function updateStatus(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
         
-        // Validate dữ liệu đầu vào
         $request->validate([
-            'status' => 'required|in:pending,confirmed,completed,cancelled'
+            'status' => 'required|in:pending,confirmed,cancelled,completed'
         ]);
 
-        $booking->status = $request->status;
-        $booking->save();
+        $booking->update([
+            'status' => $request->status
+        ]);
 
-        // (Mở rộng) Nếu duyệt đơn thì có thể cập nhật trạng thái xe thành "Đang bận"
-        // if ($request->status == 'confirmed') {
-        //     $booking->vehicle->update(['status' => 'rented']);
-        // }
-
-        return redirect()->back()->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
+        return back()->with('success', 'Đã cập nhật trạng thái đơn hàng thành công!');
     }
 }

@@ -31,25 +31,37 @@
         <div class="container mx-auto px-4 h-16 flex justify-between items-center">
             
             <div class="flex-shrink-0 flex items-center">
-                <a href="{{ route('vehicles.index') }}" class="group">
+                <a href="{{ route('home') }}" class="group">
                     <img src="{{ asset('images/logo.png') }}" alt="Thiuu Rental" style="height: 48px; width: auto;" class="object-contain transition group-hover:opacity-90">
                 </a>
             </div>
 
             <nav class="hidden md:flex items-center space-x-8 font-bold text-gray-700 dark:text-gray-300 uppercase text-xs tracking-wide">
-                <a href="{{ route('vehicles.index') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2">Trang chủ</a>
-                <a href="{{ route('vehicles.index') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2">Đội xe</a>
+                <a href="{{ route('home') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2 {{ request()->routeIs('home') ? 'text-blue-700 border-b-2 border-blue-700' : '' }}">Trang chủ</a>
+                
+                <a href="{{ route('vehicles.index') }}" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2 {{ request()->routeIs('vehicles.index') ? 'text-blue-700 border-b-2 border-blue-700' : '' }}">Đội xe</a>
+                
                 <a href="#" class="hover:text-blue-700 dark:hover:text-blue-400 transition py-2">Dịch vụ</a>
             </nav>
 
             <div class="flex items-center gap-3">
-                
                 <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2 transition">
                     <i id="theme-toggle-dark-icon" class="fa-solid fa-moon hidden text-lg"></i>
                     <i id="theme-toggle-light-icon" class="fa-solid fa-sun hidden text-lg text-yellow-400"></i>
                 </button>
 
                 @auth
+                @if(Auth::user()->role === 'master')
+    <a href="{{ route('master.admins.index') }}" class="bg-purple-700 text-white px-3 py-2 rounded font-bold text-xs">
+        <i class="fa-solid fa-crown mr-1"></i> Quản lý Admin
+    </a>
+@endif
+
+@if(in_array(Auth::user()->role, ['admin', 'master']))
+    <a href="{{ route('admin.dashboard') }}" class="bg-blue-800 text-white px-3 py-2 rounded font-bold text-xs">
+        <i class="fa-solid fa-user-shield mr-1"></i> Admin Panel
+    </a>
+@endif
                     <div class="flex items-center gap-2">
                         <div class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 rounded-full border border-gray-200 dark:border-gray-600">
                             <div class="w-6 h-6 rounded-full overflow-hidden border border-gray-300 dark:border-gray-500">
@@ -60,21 +72,26 @@
                             </span>
                         </div>
 
-                        @if(Auth::user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" class="bg-blue-800 dark:bg-blue-700 text-white w-9 h-9 md:w-auto md:h-auto md:px-3 md:py-2 rounded flex items-center justify-center hover:bg-blue-900 dark:hover:bg-blue-600 transition font-bold text-xs shadow" title="Vào Dashboard">
-                                <i class="fa-solid fa-gauge md:mr-1"></i> <span class="hidden md:inline">Dashboard</span>
+                        {{-- Thay Dashboard bằng link Profile trực tiếp --}}
+                        <a href="{{ route('profile.edit') }}" class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded flex items-center hover:bg-gray-200 transition font-bold text-xs shadow border" title="Cài đặt tài khoản">
+                            <i class="fa-solid fa-user-gear mr-1"></i> Tài khoản
+                        </a>
+
+                        @if(Auth::user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}" class="bg-blue-800 dark:bg-blue-700 text-white px-3 py-2 rounded flex items-center hover:bg-blue-900 transition font-bold text-xs shadow" title="Quản trị hệ thống">
+                                <i class="fa-solid fa-user-shield mr-1"></i> Admin
                             </a>
                         @endif
 
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-500 hover:text-white border border-red-100 dark:border-red-800 w-9 h-9 md:w-auto md:h-auto md:px-3 md:py-2 rounded font-bold text-xs transition flex items-center justify-center" title="Đăng xuất">
+                            <button type="submit" class="bg-red-50 dark:bg-red-900/20 text-red-600 w-9 h-9 rounded font-bold text-xs transition flex items-center justify-center hover:bg-red-500 hover:text-white" title="Đăng xuất">
                                 <i class="fa-solid fa-power-off"></i>
                             </button>
                         </form>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" class="bg-yellow-500 text-blue-900 px-4 py-2 rounded hover:bg-yellow-400 transition font-bold text-xs shadow flex items-center whitespace-nowrap">
+                    <a href="{{ route('login') }}" class="bg-yellow-500 text-blue-900 px-4 py-2 rounded hover:bg-yellow-400 transition font-bold text-xs shadow flex items-center">
                         <i class="fa-solid fa-user mr-2"></i> Đăng nhập
                     </a>
                 @endauth
@@ -83,7 +100,6 @@
     </header>
 
     <main class="flex-grow">
-        {{-- Logic hiển thị linh hoạt cho cả Admin và User --}}
         @if(isset($slot) && $slot->isNotEmpty())
             {{ $slot }}
         @else
@@ -95,12 +111,14 @@
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                 <div>
-                    <img src="{{ asset('images/logo.png') }}" style="height: 40px; width: auto;" class="mb-4 bg-white p-1 rounded"> 
+                    <a href="{{ route('home') }}">
+                        <img src="{{ asset('images/logo.png') }}" style="height: 40px; width: auto;" class="mb-4 bg-white p-1 rounded"> 
+                    </a>
                     <p class="text-sm leading-relaxed mb-4 text-gray-400">Đơn vị cung cấp dịch vụ cho thuê xe uy tín, chất lượng hàng đầu.</p>
                 </div>
             </div>
             <div class="border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
-                &copy; 2024 Thiuu Car Rental. All rights reserved.
+                &copy; {{ date('Y') }} Thiuu Car Rental. All rights reserved.
             </div>
         </div>
     </footer>
@@ -116,11 +134,9 @@
         }
 
         var themeToggleBtn = document.getElementById('theme-toggle');
-
         themeToggleBtn.addEventListener('click', function() {
             themeToggleDarkIcon.classList.toggle('hidden');
             themeToggleLightIcon.classList.toggle('hidden');
-
             if (localStorage.getItem('color-theme')) {
                 if (localStorage.getItem('color-theme') === 'light') {
                     document.documentElement.classList.add('dark');

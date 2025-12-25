@@ -7,30 +7,43 @@ use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
-    // Trang chủ
+    /**
+     * TRANG CHỦ (Public): Hiển thị 8 xe mới nhất đang sẵn sàng.
+     */
     public function home()
     {
-        // Lấy 8 xe mới nhất, trạng thái 'available'
-        $recentVehicles = Vehicle::where('status', 'available')->latest()->take(8)->get();
+        $recentVehicles = Vehicle::where('status', 'available')
+            ->latest()
+            ->take(8)
+            ->get();
+
         return view('welcome', compact('recentVehicles'));
     }
 
-    // Danh sách xe (Public - Khách xem)
+    /**
+     * DANH SÁCH XE (Public): Có bộ lọc tìm kiếm đầy đủ.
+     */
     public function index(Request $request)
     {
-        $query = Vehicle::where('status', 'available'); // Chỉ hiện xe sẵn sàng
+        // 1. Chỉ lấy xe đang sẵn sàng (available)
+        $query = Vehicle::where('status', 'available');
 
-        // Lọc theo tên
+        // 2. Lọc theo tên xe (Search)
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        // Lọc theo loại
+        // 3. Lọc theo loại xe (Category)
         if ($request->filled('category')) {
-            $query->where('type', $request->category);
+            $query->where('type', $request->category); // Đảm bảo cột trong DB là 'type' hoặc sửa thành 'category_id' tùy database
         }
 
-        // Lọc theo giá
+        // 4. Lọc theo địa điểm (Location)
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%' . $request->location . '%');
+        }
+
+        // 5. Lọc theo khoảng giá (Price Range)
         if ($request->filled('price')) {
             switch ($request->price) {
                 case 'under_1m':
@@ -45,19 +58,22 @@ class VehicleController extends Controller
             }
         }
 
-        $vehicles = $query->paginate(9);
+        // 6. Phân trang & Giữ tham số tìm kiếm khi chuyển trang
+        $vehicles = $query->latest()->paginate(9)->withQueryString();
 
-        // QUAN TRỌNG: Phải trỏ vào thư mục 'vehicles', KHÔNG PHẢI 'admin.vehicles'
         return view('vehicles.index', compact('vehicles'));
     }
 
-    // Chi tiết xe
+    /**
+     * CHI TIẾT XE (Public): Hiển thị xe và gợi ý xe liên quan.
+     */
     public function show($id)
     {
         $vehicle = Vehicle::findOrFail($id);
         
-        // Gợi ý xe liên quan (cùng hãng hoặc cùng loại)
+        // Logic gợi ý xe liên quan (cùng hãng hoặc cùng loại)
         $relatedVehicles = Vehicle::where('id', '!=', $id)
+            ->where('status', 'available')
             ->where(function($q) use ($vehicle) {
                 $q->where('brand', $vehicle->brand)
                   ->orWhere('type', $vehicle->type);

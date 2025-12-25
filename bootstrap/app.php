@@ -11,9 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // --- SỬA Ở ĐÂY: Đăng ký Alias cho AdminMiddleware ---
+        // --- GỘP CHUNG TẤT CẢ ALIAS VÀO ĐÂY ---
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin'       => \App\Http\Middleware\AdminMiddleware::class,
+            'CheckMaster' => \App\Http\Middleware\CheckMaster::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

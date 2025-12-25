@@ -21,13 +21,8 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        // Admin -> Vào trang quản trị
-        if (Auth::user()->role === 'admin') {
-             return redirect()->intended(route('welcome', absolute: false));
-        }
-
-        // Khách hàng -> Về trang Welcome (Trang chủ)
-       return redirect()->intended(route('admin.dashboard', absolute: false));
+        // YÊU CẦU CỦA BẠN: Cả Admin và User đều vào trang Welcome trước
+        return redirect()->intended(route('welcome', absolute: false));
     }
 
     public function destroy(Request $request): RedirectResponse
