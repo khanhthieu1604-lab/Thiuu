@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class BookingController extends Controller
 {
     /**
-     * 1. Hiển thị form xác nhận đặt xe (MỚI THÊM)
+     * 1. Hiển thị form xác nhận đặt xe
      * Route: /bookings/create/{vehicle_id}
      */
     public function create($vehicle_id)
@@ -54,7 +54,7 @@ class BookingController extends Controller
         $totalPrice = $days * $vehicle->rent_price_per_day;
 
         // Tạo đơn đặt xe
-        Booking::create([
+        $booking = Booking::create([
             'user_id'     => Auth::id(),
             'vehicle_id'  => $vehicle->id,
             'start_date'  => $request->start_date,
@@ -64,9 +64,9 @@ class BookingController extends Controller
             'note'        => $request->note,
         ]);
 
-        // Chuyển hướng về trang lịch sử kèm thông báo
-        return redirect()->route('bookings.history')
-                         ->with('success', 'Đặt xe thành công! Vui lòng chờ Admin xác nhận.');
+        // Chuyển hướng sang trang THANH TOÁN
+        return redirect()->route('payment.create', ['booking_id' => $booking->id])
+                         ->with('success', 'Đơn hàng đã tạo thành công! Vui lòng thanh toán để giữ chỗ.');
     }
 
     /**
@@ -82,5 +82,21 @@ class BookingController extends Controller
                            ->paginate(5);
 
         return view('bookings.history', compact('bookings'));
+    }
+
+    /**
+     * 4. Xem chi tiết hợp đồng thuê xe (BỔ SUNG LẠI)
+     * Route: /bookings/{id}/contract
+     */
+    public function showContract($id)
+    {
+        $booking = Booking::with(['vehicle', 'user'])->findOrFail($id);
+
+        // Bảo mật: Chỉ chủ đơn hàng mới được xem
+        if ($booking->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền xem hợp đồng này.');
+        }
+
+        return view('bookings.contract', compact('booking'));
     }
 }

@@ -49,4 +49,9 @@ class Vehicle extends Model
         $firstImage = $this->images()->first();
         return $firstImage ? asset('storage/' . $firstImage->image_path) : asset('images/default-car.jpg');
     }
+    // Xe có nhiều lần bảo trì
+    public function maintenances()
+    {
+        return $this->hasMany(Maintenance::class);
+    }
 }

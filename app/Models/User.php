@@ -12,15 +12,15 @@ class User extends Authenticatable
 
     /**
      * Các thuộc tính có thể gán hàng loạt (Mass Assignable).
-     * Đã bao gồm 'role', 'phone', 'address'
      */
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',    // Phân quyền: admin hoặc user
-        'phone',   // Số điện thoại
-        'address', // Địa chỉ
+        'phone',   // Số điện thoại (MỚI)
+        'address', // Địa chỉ (MỚI)
+        'avatar',  // Ảnh đại diện (MỚI)
     ];
 
     /**
@@ -48,7 +48,6 @@ class User extends Authenticatable
 
     /**
      * Kiểm tra xem user có phải là Admin không
-     * Hàm này được dùng trong AdminMiddleware và blade
      */
     public function isAdmin()
     {
@@ -56,28 +55,21 @@ class User extends Authenticatable
     }
 
     /**
-     * Kiểm tra xem user có phải Khách hàng không (tùy chọn)
+     * Kiểm tra xem user có phải Khách hàng không
      */
     public function isCustomer()
     {
-        return $this->role === 'customer' || $this->role === 'user';
+        return $this->role === 'customer' || $this->role === 'user' || $this->role === null;
     }
 
     /* =======================
         RELATIONSHIPS (QUAN HỆ)
-       Dựa trên cấu trúc database đã tạo
     ======================= */
 
-    // User có nhiều đơn thuê xe
-    public function rentals()
+    // User có nhiều đơn đặt xe (Sửa từ rentals -> bookings)
+    public function bookings()
     {
-        return $this->hasMany(Rental::class);
-    }
-
-    // User có nhiều đơn mua xe (nếu có tính năng bán)
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Booking::class);
     }
 
     // User có nhiều lịch sử thanh toán

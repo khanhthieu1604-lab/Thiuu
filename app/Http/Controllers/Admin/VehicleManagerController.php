@@ -104,4 +104,12 @@ class VehicleManagerController extends Controller
         $vehicle->delete();
         return redirect()->route('admin.vehicles.index')->with('success', 'Đã xóa xe khỏi hệ thống!');
     }
+    // Trong VehicleManagerController.php
+            public function manage($id)
+            {
+                // Lấy thông tin xe kèm theo lịch sử bảo trì của nó
+                $vehicle = \App\Models\Vehicle::with('maintenances')->findOrFail($id);
+                
+                return view('admin.vehicles.manage', compact('vehicle'));
+            }
 }

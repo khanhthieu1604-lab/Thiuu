@@ -10,15 +10,19 @@ class VehicleController extends Controller
     /**
      * TRANG CHỦ: 8 xe mới nhất
      */
-    public function home()
-    {
-        $recentVehicles = Vehicle::where('status', 'available')
-            ->latest()
-            ->take(8)
-            ->get();
-
-        return view('welcome', compact('recentVehicles'));
+   public function home()
+{
+    // Nếu là Admin thì đá về Dashboard (đã làm ở bước trước)
+    if (auth()->check() && auth()->user()->role === 'admin') {
+        return redirect()->route('admin.dashboard');
     }
+
+    $brands = Vehicle::select('brand')->distinct()->get();
+    $vehicles = Vehicle::where('status', 'available')->latest()->take(6)->get();
+
+    // Đảm bảo tên view ở đây khớp với tên file trong resources/views/
+    return view('welcome', compact('vehicles', 'brands')); 
+}
 
     /**
      * DANH SÁCH XE: Bộ lọc tìm kiếm

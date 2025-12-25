@@ -10,10 +10,13 @@ use Illuminate\Validation\Rules;
 
 class UserManagerController extends Controller
 {
-    // 1. Danh sách người dùng
+    // 1. Danh sách người dùng (Không truy vấn mật khẩu để bảo mật)
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(10);
+        $users = User::select('id', 'name', 'email', 'role', 'phone', 'created_at')
+                    ->where('id', '!=', auth()->id()) // Không hiện chính mình
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 
@@ -30,7 +33,7 @@ class UserManagerController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:admin,user'], // Phân quyền
+            'role' => ['required', 'in:admin,user'], 
         ]);
 
         User::create([
@@ -65,7 +68,6 @@ class UserManagerController extends Controller
         $user->email = $request->email;
         $user->role = $request->role;
 
-        // Nếu có nhập mật khẩu mới thì mới đổi
         if ($request->filled('password')) {
             $request->validate([
                 'password' => ['confirmed', Rules\Password::defaults()],
@@ -74,8 +76,7 @@ class UserManagerController extends Controller
         }
 
         $user->save();
-
-        return redirect()->route('admin.users.index')->with('success', 'Cập nhật thông tin thành công!');
+        return redirect()->route('admin.users.index')->with('success', 'Cập nhật thành công!');
     }
 
     // 6. Xóa tài khoản
@@ -85,9 +86,7 @@ class UserManagerController extends Controller
             return back()->with('error', 'Bạn không thể tự xóa chính mình!');
         }
         
-        $user = User::findOrFail($id);
-        $user->delete();
-
-        return back()->with('success', 'Đã xóa tài khoản thành công!');
+        User::findOrFail($id)->delete();
+        return back()->with('success', 'Đã xóa tài khoản!');
     }
 }
