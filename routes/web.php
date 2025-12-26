@@ -4,7 +4,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\VehicleManagerController;
 use App\Http\Controllers\Admin\BookingManagerController;
 use App\Http\Controllers\Admin\MaintenanceController;
-use App\Http\Controllers\Admin\UserManagerController; // <--- THÊM MỚI
+use App\Http\Controllers\Admin\UserManagerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\BookingController;
@@ -43,17 +43,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Quản lý xe & Bảo trì
     Route::resource('vehicles', VehicleManagerController::class);
     Route::get('/vehicles/{id}/manage', [VehicleManagerController::class, 'manage'])->name('vehicles.manage');
-    
     Route::post('/maintenance', [MaintenanceController::class, 'store'])->name('maintenance.store');
     Route::delete('/maintenance/{id}', [MaintenanceController::class, 'destroy'])->name('maintenance.destroy');
 
+    // Quản lý đơn hàng
     Route::get('/bookings', [BookingManagerController::class, 'index'])->name('bookings.index');
     Route::patch('/bookings/{id}/status', [BookingManagerController::class, 'updateStatus'])->name('bookings.update_status');
 
-    // ROUTE QUẢN LÝ NGƯỜI DÙNG
+    // Quản lý người dùng
     Route::get('/users', [UserManagerController::class, 'index'])->name('users.index');
+    Route::put('/users/{id}/role', [UserManagerController::class, 'toggleRole'])->name('users.role');
+    Route::delete('/users/{id}', [UserManagerController::class, 'destroy'])->name('users.destroy');
 });
 
 require __DIR__.'/auth.php';

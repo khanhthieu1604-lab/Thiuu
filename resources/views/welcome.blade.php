@@ -2,6 +2,7 @@
 
 @section('content')
 
+    {{-- Hero Section --}}
     <div class="relative bg-gray-900 h-[500px] flex items-center justify-center overflow-hidden">
         <div class="absolute inset-0 z-0">
             <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop" 
@@ -32,9 +33,9 @@
                     
                     <select name="price" class="bg-white/90 border-0 rounded text-xs px-3 py-3 focus:ring-2 focus:ring-yellow-500 text-gray-900 cursor-pointer">
                         <option value="">Mức giá</option>
-                        <option value="low">&lt; 1 Triệu</option>
-                        <option value="medium">1 - 2 Triệu</option>
-                        <option value="high">&gt; 2 Triệu</option>
+                        <option value="under_1m">&lt; 1 Triệu</option>
+                        <option value="1m_2m">1 - 2 Triệu</option>
+                        <option value="above_2m">&gt; 2 Triệu</option>
                     </select>
                     
                     <button type="submit" class="bg-yellow-500 hover:bg-yellow-400 text-blue-900 font-bold uppercase text-xs rounded py-3 transition shadow-lg flex items-center justify-center gap-2">
@@ -45,28 +46,32 @@
         </div>
     </div>
 
+    {{-- Danh sách xe mới nhất --}}
     <section class="container mx-auto px-4 py-16">
         
         <div class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-gray-800 pb-4">
             <div>
                 <span class="text-yellow-500 text-xs font-bold uppercase tracking-[0.2em] mb-2 block">Bộ sưu tập</span>
-                <h2 class="text-3xl font-heading font-bold text-black">Xe Mới Nhất</h2>
+                <h2 class="text-3xl font-heading font-bold text-black dark:text-white">Xe Mới Nhất</h2>
             </div>
-            <a href="{{ route('vehicles.index') }}" class="group flex items-center gap-2 text-sm text-gray-400 hover:text-white transition mt-4 md:mt-0">
+            <a href="{{ route('vehicles.index') }}" class="group flex items-center gap-2 text-sm text-gray-400 hover:text-blue-600 transition mt-4 md:mt-0">
                 <span class="uppercase tracking-wider text-xs font-bold">Xem tất cả</span>
                 <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition text-yellow-500"></i>
             </a>
         </div>
 
-        @if(isset($recentVehicles) && $recentVehicles->count() > 0)
+        {{-- Đồng bộ biến $vehicles từ Controller --}}
+        @if(isset($vehicles) && $vehicles->count() > 0)
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                @foreach($recentVehicles as $vehicle)
+                @foreach($vehicles as $vehicle)
                     <div class="group bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-yellow-500/50 hover:shadow-[0_0_15px_rgba(234,179,8,0.1)] transition-all duration-300 flex flex-col">
                         
                         <div class="relative h-48 bg-gray-800 overflow-hidden">
                             <a href="{{ route('vehicles.show', $vehicle->id) }}" class="block w-full h-full">
                                 @if($vehicle->image)
-                                    <img src="{{ asset($vehicle->image) }}" alt="{{ $vehicle->name }}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-700 ease-out">
+                                    <img src="{{ str_contains($vehicle->image, 'http') ? $vehicle->image : asset('storage/' . $vehicle->image) }}" 
+                                         alt="{{ $vehicle->name }}" 
+                                         class="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-700 ease-out">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-gray-700 bg-gray-800">
                                         <i class="fa-solid fa-car text-4xl"></i>
@@ -90,14 +95,11 @@
                                 <a href="{{ route('vehicles.show', $vehicle->id) }}">{{ $vehicle->name }}</a>
                             </h3>
                             
-                            <p class="text-xs text-gray-500 mb-4">{{ $vehicle->type ?? 'Sedan' }} • Đời 2023</p>
+                            <p class="text-xs text-gray-500 mb-4">{{ $vehicle->type ?? 'Premium' }} • Sẵn sàng</p>
                             
                             <div class="flex items-center gap-4 text-xs text-gray-400 border-t border-gray-800 pt-3 mb-4">
                                 <div class="flex items-center gap-1.5" title="Số chỗ">
-                                    <i class="fa-solid fa-user-group text-yellow-600"></i> <span>5</span>
-                                </div>
-                                <div class="flex items-center gap-1.5" title="Nhiên liệu">
-                                    <i class="fa-solid fa-gas-pump text-yellow-600"></i> <span>Xăng</span>
+                                    <i class="fa-solid fa-user-group text-yellow-600"></i> <span>5 chỗ</span>
                                 </div>
                                 <div class="flex items-center gap-1.5" title="Hộp số">
                                     <i class="fa-solid fa-gear text-yellow-600"></i> <span>Tự động</span>
@@ -108,12 +110,12 @@
                                 <div>
                                     <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Giá thuê</p>
                                     <div class="flex items-baseline gap-1">
-                                        <span class="text-lg font-bold text-yellow-500">{{ number_format($vehicle->rent_price_per_day / 1000) }}k</span>
+                                        <span class="text-lg font-bold text-yellow-500">{{ number_format($vehicle->rent_price_per_day / 1000, 0) }}k</span>
                                         <span class="text-xs text-gray-500">/ngày</span>
                                     </div>
                                 </div>
                                 <a href="{{ route('vehicles.show', $vehicle->id) }}" class="bg-white text-black hover:bg-yellow-500 hover:text-black px-4 py-2 rounded text-xs font-bold uppercase transition tracking-wide transform active:scale-95">
-                                    Đặt xe
+                                    Chi tiết
                                 </a>
                             </div>
                         </div>
@@ -123,11 +125,13 @@
         @else
             <div class="py-20 text-center border border-dashed border-gray-800 rounded-lg bg-gray-900/50">
                 <i class="fa-solid fa-car-tunnel text-4xl text-gray-700 mb-4"></i>
-                <p class="text-gray-500 text-sm">Hiện chưa có xe nào được đăng tải.</p>
+                <p class="text-gray-500 text-sm font-bold uppercase tracking-widest">Hiện tại hệ thống đang cập nhật xe mới...</p>
+                <p class="text-xs text-gray-600 mt-2 italic">Vui lòng quay lại sau ít phút hoặc chạy Seed dữ liệu.</p>
             </div>
         @endif
     </section>
 
+    {{-- Features Section --}}
     <section class="bg-gray-50 dark:bg-gray-800/50 py-12 border-t border-gray-200 dark:border-gray-800">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
@@ -136,21 +140,21 @@
                         <i class="fa-solid fa-medal text-2xl text-yellow-500"></i>
                     </div>
                     <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase mb-1">Chất Lượng Vàng</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 px-4">100% xe đời mới, sạch sẽ, không mùi hôi.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 px-4">100% xe đời mới, sạch sẽ, bảo trì định kỳ chuẩn hãng.</p>
                 </div>
                 <div class="p-4 group">
                     <div class="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-110 transition">
                         <i class="fa-solid fa-bolt text-2xl text-yellow-500"></i>
                     </div>
                     <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase mb-1">Thủ Tục Nhanh</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 px-4">Nhận xe chỉ sau 5 phút làm việc.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 px-4">Xác nhận nhanh chóng, nhận xe chỉ sau 5 phút làm việc.</p>
                 </div>
                 <div class="p-4 group">
                     <div class="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:scale-110 transition">
                         <i class="fa-solid fa-headset text-2xl text-yellow-500"></i>
                     </div>
                     <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase mb-1">Hỗ Trợ 24/7</h4>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 px-4">Luôn bên bạn mọi lúc mọi nơi.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 px-4">Đội ngũ kỹ thuật và CSKH luôn sẵn sàng hỗ trợ bạn trên mọi cung đường.</p>
                 </div>
             </div>
         </div>
