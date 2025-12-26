@@ -13,7 +13,6 @@ class BookingManagerController extends Controller
      */
     public function index()
     {
-        // Sử dụng eager loading (with) để tối ưu truy vấn SQL
         $bookings = Booking::with(['user', 'vehicle'])
             ->latest()
             ->paginate(15);
@@ -22,20 +21,31 @@ class BookingManagerController extends Controller
     }
 
     /**
-     * Cập nhật trạng thái đơn hàng (Duyệt/Hủy)
+     * Cập nhật trạng thái đơn hàng & Đồng bộ trạng thái xe
      */
     public function updateStatus(Request $request, $id)
     {
-        $booking = Booking::findOrFail($id);
+        $booking = Booking::with('vehicle')->findOrFail($id);
         
         $request->validate([
             'status' => 'required|in:pending,confirmed,cancelled,completed'
         ]);
 
+        // 1. Cập nhật trạng thái đơn hàng
         $booking->update([
             'status' => $request->status
         ]);
 
-        return back()->with('success', 'Đã cập nhật trạng thái đơn hàng thành công!');
+        // 2. TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI XE (Logic quan trọng)
+        // Nếu duyệt đơn (confirmed) -> Xe chuyển sang "Đang thuê" (rented)
+        if ($request->status === 'confirmed') {
+            $booking->vehicle->update(['status' => 'rented']);
+        }
+        // Nếu hoàn thành (completed) hoặc hủy (cancelled) -> Xe về "Sẵn sàng" (available)
+        elseif (in_array($request->status, ['completed', 'cancelled'])) {
+            $booking->vehicle->update(['status' => 'available']);
+        }
+
+        return back()->with('success', 'Đã cập nhật đơn hàng và trạng thái xe thành công!');
     }
 }

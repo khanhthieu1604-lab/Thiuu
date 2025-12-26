@@ -7,10 +7,12 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    /**
+     * WEB: Hiển thị Dashboard Admin (Blade View)
+     */
     public function index()
     {
         // 1. Thống kê cơ bản
@@ -43,20 +45,27 @@ class DashboardController extends Controller
             'rentedCars'
         ));
     }
-    /**
- * API: Thống kê nhanh cho Admin
- */
-public function apiStats()
-{
-    if (auth()->user()->role !== 'admin') {
-        return response()->json(['message' => 'Unauthorized'], 403);
-    }
 
-    return response()->json([
-        'total_vehicles' => \App\Models\Vehicle::count(),
-        'total_bookings' => \App\Models\Booking::count(),
-        'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
-        'total_revenue' => \App\Models\Booking::where('status', 'completed')->sum('total_price'),
-    ]);
-}
+    /**
+     * API: Thống kê nhanh cho Admin (Mobile App)
+     * GET /api/admin/stats
+     */
+    public function apiStats()
+    {
+        // Kiểm tra quyền Admin (Dù Middleware đã check, check thêm cũng tốt)
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized: Bạn không phải Admin'], 403);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total_vehicles' => Vehicle::count(),
+                'total_bookings' => Booking::count(),
+                'pending_bookings' => Booking::where('status', 'pending')->count(),
+                'total_revenue' => Booking::where('status', 'completed')->sum('total_price'),
+                // Có thể thêm các thống kê khác nếu App cần
+            ]
+        ]);
+    }
 }

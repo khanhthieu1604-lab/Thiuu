@@ -15,29 +15,21 @@ class Booking extends Model
         'start_date', 
         'end_date', 
         'total_price', 
-        'status', 
+        'status', // pending, confirmed, cancelled, completed
         'note'
     ];
 
-    /**
-     * Tự động ép kiểu dữ liệu ngày tháng
-     */
+    // Tự động ép kiểu ngày tháng để tính toán trong Controller
     protected $casts = [
         'start_date' => 'datetime',
         'end_date'   => 'datetime',
     ];
 
-    /**
-     * Liên kết với Xe (Một đơn đặt thuộc về một xe)
-     */
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
     }
 
-    /**
-     * Liên kết với Người dùng (Một đơn đặt thuộc về một khách hàng)
-     */
     public function user()
     {
         return $this->belongsTo(User::class);

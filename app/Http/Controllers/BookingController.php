@@ -15,12 +15,13 @@ class BookingController extends Controller
     ============================================================ */
 
     /**
-     * 1. Hiển thị form xác nhận đặt xe
+     * 1. Hiển thị form xác nhận đặt xe (Sửa lỗi thiếu hàm này)
      */
     public function create($vehicle_id)
     {
         $vehicle = Vehicle::findOrFail($vehicle_id);
 
+        // Kiểm tra nếu xe đang bảo trì hoặc đã cho thuê
         if ($vehicle->status !== 'available') {
             return redirect()->back()->with('error', 'Rất tiếc, xe này hiện không khả dụng.');
         }
@@ -46,6 +47,8 @@ class BookingController extends Controller
 
         $start = Carbon::parse($request->start_date);
         $end   = Carbon::parse($request->end_date);
+        
+        // Tính số ngày (ít nhất là 1 ngày)
         $days  = $start->diffInDays($end);
         if ($days < 1) $days = 1; 
 
@@ -61,6 +64,7 @@ class BookingController extends Controller
             'note'        => $request->note,
         ]);
 
+        // Chuyển hướng sang trang thanh toán
         return redirect()->route('payment.create', ['booking_id' => $booking->id])
                          ->with('success', 'Đơn hàng đã tạo thành công! Vui lòng thanh toán để giữ chỗ.');
     }
@@ -79,7 +83,7 @@ class BookingController extends Controller
     }
 
     /**
-     * 4. Xem chi tiết hợp đồng thuê xe
+     * 4. Xem chi tiết hợp đồng thuê xe (Web)
      */
     public function showContract($id)
     {
@@ -103,7 +107,6 @@ class BookingController extends Controller
      */
     public function apiStore(Request $request)
     {
-        // 1. Validate dữ liệu gửi lên từ Postman
         $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
             'start_date' => 'required|date|after_or_equal:today',
@@ -112,7 +115,6 @@ class BookingController extends Controller
 
         $vehicle = Vehicle::findOrFail($request->vehicle_id);
 
-        // 2. Tính giá tiền
         $start = Carbon::parse($request->start_date);
         $end   = Carbon::parse($request->end_date);
         $days  = $start->diffInDays($end);
@@ -120,7 +122,6 @@ class BookingController extends Controller
 
         $totalPrice = $days * $vehicle->rent_price_per_day;
 
-        // 3. Tạo booking (Auth::id() lúc này lấy từ Token)
         $booking = Booking::create([
             'user_id'     => Auth::id(), 
             'vehicle_id'  => $vehicle->id,
@@ -133,7 +134,7 @@ class BookingController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Đặt xe thành công qua API!',
+            'message' => 'Đặt xe thành công!',
             'data' => $booking->load('vehicle')
         ], 201);
     }
@@ -144,7 +145,6 @@ class BookingController extends Controller
      */
     public function apiHistory()
     {
-        // Trả về JSON thay vì View
         $bookings = Booking::with('vehicle')
                            ->where('user_id', Auth::id())
                            ->latest()
@@ -155,49 +155,39 @@ class BookingController extends Controller
             'data' => $bookings
         ], 200);
     }
-    /**
-     * API: Admin duyệt hoặc hủy đơn hàng
-     * Endpoint: PATCH /api/admin/bookings/{id}/status
-     */
-    public function apiUpdateStatus(Request $request, $id)
-    {
-        // Chỉ cho phép admin thực hiện
-        if (auth()->user()->role !== 'admin') {
-            return response()->json(['message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
-        }
-
-        $request->validate([
-            'status' => 'required|in:confirmed,completed,cancelled',
-        ]);
-
-        $booking = Booking::findOrFail($id);
-        $booking->update(['status' => $request->status]);
-
-        // Nếu hoàn thành hoặc hủy, có thể cập nhật lại trạng thái xe
-        if ($request->status === 'completed' || $request->status === 'cancelled') {
-            $booking->vehicle->update(['status' => 'available']);
-        } elseif ($request->status === 'confirmed') {
-            $booking->vehicle->update(['status' => 'rented']);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Cập nhật trạng thái đơn hàng thành công!',
-            'data' => $booking
-        ]);
-    }
 
     /**
-     * API: Admin lấy danh sách tất cả đơn hàng
-     * Endpoint: GET /api/admin/bookings
+     * API: Admin lấy danh sách đơn (cho App quản lý)
      */
     public function apiAllBookings()
     {
         if (auth()->user()->role !== 'admin') {
-            return response()->json(['message' => 'Quyền truy cập bị từ chối.'], 403);
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        return response()->json(['data' => Booking::with(['vehicle', 'user'])->latest()->get()]);
+    }
+
+    /**
+     * API: Admin cập nhật trạng thái đơn
+     */
+    public function apiUpdateStatus(Request $request, $id)
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        
+        $request->validate(['status' => 'required|in:confirmed,completed,cancelled']);
+        
+        $booking = Booking::findOrFail($id);
+        $booking->update(['status' => $request->status]);
+
+        // Cập nhật trạng thái xe tương ứng
+        if ($request->status === 'confirmed') {
+            $booking->vehicle->update(['status' => 'rented']);
+        } elseif (in_array($request->status, ['completed', 'cancelled'])) {
+            $booking->vehicle->update(['status' => 'available']);
         }
 
-        $bookings = Booking::with(['vehicle', 'user'])->latest()->get();
-        return response()->json(['data' => $bookings]);
+        return response()->json(['message' => 'Success', 'data' => $booking]);
     }
 }

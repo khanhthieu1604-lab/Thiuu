@@ -18,7 +18,8 @@ class PaymentController extends Controller
             abort(403, 'Bạn không có quyền truy cập đơn hàng này.');
         }
 
-        return view('payment.create', compact('booking'));
+        // SỬA LỖI TẠI ĐÂY: Đổi 'payment.create' thành 'payments.create' (số nhiều)
+        return view('payments.create', compact('booking'));
     }
 
     // 2. Xử lý thanh toán (Mô phỏng)
@@ -33,7 +34,7 @@ class PaymentController extends Controller
 
         // Cập nhật trạng thái đơn hàng thành "Đã xác nhận/Đã cọc"
         $booking->update([
-            'status' => 'confirmed' // Hoặc trạng thái khác tùy logic của bạn
+            'status' => 'confirmed' // Hoặc 'deposited' tùy logic của bạn
         ]);
 
         // (Ở đây có thể thêm logic lưu vào bảng payments nếu cần)

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File; // Sử dụng Facade File để quản lý file an toàn hơn
 
 class VehicleManagerController extends Controller
 {
@@ -26,22 +26,27 @@ class VehicleManagerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'brand' => 'required',
-            'type' => 'required', // Sedan, SUV...
-            'rent_price_per_day' => 'required|numeric',
-            'image' => 'nullable|image|max:2048',
+            'name' => 'required|string|max:255',
+            'brand' => 'required|string|max:255',
+            'type' => 'required|string', // Sedan, SUV...
+            'rent_price_per_day' => 'required|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate kỹ file ảnh
             'description' => 'nullable',
         ]);
 
         $data = $request->all();
-        $data['status'] = 'available'; // Mặc định là 'Sẵn sàng'
+        $data['status'] = 'available';
 
         // Xử lý upload ảnh
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/vehicles'), $filename);
+            // Đảm bảo thư mục tồn tại
+            $path = public_path('uploads/vehicles');
+            if (!File::exists($path)) {
+                File::makeDirectory($path, 0755, true);
+            }
+            $file->move($path, $filename);
             $data['image'] = 'uploads/vehicles/' . $filename;
         }
 
@@ -50,36 +55,36 @@ class VehicleManagerController extends Controller
         return redirect()->route('admin.vehicles.index')->with('success', 'Thêm xe thành công!');
     }
 
-    // 4. Form chỉnh sửa (MỚI)
+    // 4. Form chỉnh sửa
     public function edit($id)
     {
         $vehicle = Vehicle::findOrFail($id);
         return view('admin.vehicles.edit', compact('vehicle'));
     }
 
-    // 5. Cập nhật thông tin (MỚI)
+    // 5. Cập nhật thông tin
     public function update(Request $request, $id)
     {
         $vehicle = Vehicle::findOrFail($id);
 
         $request->validate([
-            'name' => 'required',
-            'brand' => 'required',
-            'rent_price_per_day' => 'required|numeric',
-            'image' => 'nullable|image|max:2048',
+            'name' => 'required|string|max:255',
+            'brand' => 'required|string|max:255',
+            'rent_price_per_day' => 'required|numeric|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:available,rented,maintenance',
         ]);
 
         $data = $request->except(['image']);
 
-        // Xử lý ảnh mới (nếu có)
+        // Xử lý ảnh mới
         if ($request->hasFile('image')) {
-            // 1. Xóa ảnh cũ nếu có (để tiết kiệm dung lượng)
-            if ($vehicle->image && file_exists(public_path($vehicle->image))) {
-                unlink(public_path($vehicle->image));
+            // Xóa ảnh cũ
+            if ($vehicle->image && File::exists(public_path($vehicle->image))) {
+                File::delete(public_path($vehicle->image));
             }
 
-            // 2. Upload ảnh mới
+            // Upload ảnh mới
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads/vehicles'), $filename);
@@ -96,20 +101,22 @@ class VehicleManagerController extends Controller
     {
         $vehicle = Vehicle::findOrFail($id);
         
-        // Xóa ảnh khi xóa xe
-        if ($vehicle->image && file_exists(public_path($vehicle->image))) {
-            unlink(public_path($vehicle->image));
+        // Xóa ảnh
+        if ($vehicle->image && File::exists(public_path($vehicle->image))) {
+            File::delete(public_path($vehicle->image));
         }
 
         $vehicle->delete();
         return redirect()->route('admin.vehicles.index')->with('success', 'Đã xóa xe khỏi hệ thống!');
     }
-    // Trong VehicleManagerController.php
-            public function manage($id)
-            {
-                // Lấy thông tin xe kèm theo lịch sử bảo trì của nó
-                $vehicle = \App\Models\Vehicle::with('maintenances')->findOrFail($id);
-                
-                return view('admin.vehicles.manage', compact('vehicle'));
-            }
+
+    // 7. Quản lý chi tiết (Bảo trì)
+    public function manage($id)
+    {
+        // Lưu ý: Đảm bảo bạn có quan hệ 'maintenances' trong Model Vehicle
+        $vehicle = Vehicle::with('maintenances')->findOrFail($id);
+        
+        // Sửa lỗi: View nên là .blade.php, hãy đảm bảo file view tên là manage.blade.php
+        return view('admin.vehicles.manage', compact('vehicle'));
+    }
 }
