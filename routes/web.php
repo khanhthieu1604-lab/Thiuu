@@ -10,6 +10,8 @@ use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
+
 
 // --- 1. KHU VỰC CÔNG KHAI ---
 Route::get('/', [VehicleController::class, 'home'])->name('home');
@@ -60,3 +62,37 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 require __DIR__.'/auth.php';
+
+// --- ĐƯỜNG DẪN CỨU HỘ ---
+Route::get('/cuu-toi-di', function () {
+    // 1. Chạy lệnh tạo bảng (Migrate)
+    try {
+        Artisan::call('migrate --force');
+        echo "<h2 style='color:green'>✅ Tạo bảng (Migrate): THÀNH CÔNG!</h2>";
+    } catch (\Exception $e) {
+        echo "<h2 style='color:red'>❌ Lỗi Migrate: " . $e->getMessage() . "</h2>";
+    }
+
+    // 2. Chạy lệnh nối ảnh (Storage Link)
+    try {
+        Artisan::call('storage:link');
+        echo "<h2 style='color:green'>✅ Nối ảnh (Storage Link): THÀNH CÔNG!</h2>";
+    } catch (\Exception $e) {
+        echo "<h2 style='color:orange'>⚠️ Nối ảnh: " . $e->getMessage() . " (Có thể đã nối rồi)</h2>";
+    }
+
+    // 3. Chạy lệnh tạo Admin (Seed)
+    try {
+        Artisan::call('db:seed --force');
+        echo "<h2 style='color:green'>✅ Tạo Admin (Seed): THÀNH CÔNG!</h2>";
+    } catch (\Exception $e) {
+        echo "<h2 style='color:orange'>⚠️ Tạo Admin: Dữ liệu đã có rồi (Bỏ qua)</h2>";
+    }
+    
+    // 4. Xóa Cache (Cho chắc ăn)
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    echo "<h3>🧹 Đã dọn dẹp Cache sạch sẽ.</h3>";
+
+    echo "<hr><h1>🎉 XONG RỒI ĐÓ! <a href='/'>BẤM VÀO ĐÂY ĐỂ VỀ TRANG CHỦ</a></h1>";
+});
