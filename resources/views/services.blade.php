@@ -54,8 +54,8 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-500"></i> Đưa đón đúng giờ</li>
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check text-blue-500"></i> Nước suối & Wifi free</li>
                 </ul>
-                <a href="#" class="inline-block w-full text-center py-3 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-bold text-xs uppercase hover:bg-blue-600 hover:border-blue-600 hover:text-white transition">
-                    Liên hệ đặt xe
+                <a href="https://visafe.com.vn/" class="inline-block w-full text-center py-3 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-bold text-xs uppercase hover:bg-blue-600 hover:border-blue-600 hover:text-white transition">
+                    Liên hệ tài xế
                 </a>
             </div>
 

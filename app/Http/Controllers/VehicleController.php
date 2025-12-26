@@ -126,4 +126,5 @@ public function apiStore(Request $request)
     $vehicle = Vehicle::create($validated);
     return response()->json(['message' => 'Thêm xe thành công', 'data' => $vehicle], 201);
 }
+
 }
