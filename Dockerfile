@@ -17,4 +17,5 @@ ENV LOG_CHANNEL stderr
 # Allow composer to run
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
-CMD ["/bin/sh", "-c", "php artisan migrate --force && php artisan db:seed --force && php artisan storage:link && /start.sh"]
+# Sửa dòng cuối cùng thành dòng này:
+CMD ["/start.sh"]
