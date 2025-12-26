@@ -78,4 +78,26 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+    /**
+     * API: Cập nhật thông tin cá nhân
+     * Endpoint: PUT /api/profile/update
+     */
+    public function apiUpdate(Request $request)
+    {
+        $user = auth()->user();
+        
+        $validated = $request->validate([
+            'name' => 'string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cập nhật hồ sơ thành công!',
+            'user' => $user
+        ]);
+    }
 }

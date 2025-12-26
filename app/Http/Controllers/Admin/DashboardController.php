@@ -43,4 +43,20 @@ class DashboardController extends Controller
             'rentedCars'
         ));
     }
+    /**
+ * API: Thống kê nhanh cho Admin
+ */
+public function apiStats()
+{
+    if (auth()->user()->role !== 'admin') {
+        return response()->json(['message' => 'Unauthorized'], 403);
+    }
+
+    return response()->json([
+        'total_vehicles' => \App\Models\Vehicle::count(),
+        'total_bookings' => \App\Models\Booking::count(),
+        'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
+        'total_revenue' => \App\Models\Booking::where('status', 'completed')->sum('total_price'),
+    ]);
+}
 }

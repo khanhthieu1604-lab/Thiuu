@@ -71,4 +71,59 @@ class VehicleController extends Controller
 
         return view('vehicles.show', compact('vehicle', 'relatedVehicles'));
     }
+
+    /* ============================================================
+        PHẦN MỚI: XỬ LÝ CHO API (POSTMAN / MOBILE APP)
+    ============================================================ */
+
+    /**
+     * API: Danh sách xe cho Postman
+     * Endpoint: GET /api/vehicles
+     */
+    public function apiIndex()
+    {
+        $vehicles = Vehicle::where('status', 'available')->latest()->get();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lấy danh sách xe thành công',
+            'data' => $vehicles
+        ], 200);
+    }
+
+    /**
+     * API: Chi tiết xe cho Postman
+     * Endpoint: GET /api/vehicles/{id}
+     */
+    public function apiShow($id)
+    {
+        $vehicle = Vehicle::find($id);
+        
+        if (!$vehicle) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy xe'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $vehicle
+        ], 200);
+    }
+    /**
+ * API: Admin thêm xe mới
+ */
+public function apiStore(Request $request)
+{
+    $validated = $request->validate([
+        'name' => 'required|string',
+        'brand' => 'required|string',
+        'type' => 'required|string',
+        'rent_price_per_day' => 'required|numeric',
+        'status' => 'required|in:available,rented,maintenance',
+    ]);
+
+    $vehicle = Vehicle::create($validated);
+    return response()->json(['message' => 'Thêm xe thành công', 'data' => $vehicle], 201);
+}
 }

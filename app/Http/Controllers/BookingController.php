@@ -155,4 +155,49 @@ class BookingController extends Controller
             'data' => $bookings
         ], 200);
     }
+    /**
+     * API: Admin duyệt hoặc hủy đơn hàng
+     * Endpoint: PATCH /api/admin/bookings/{id}/status
+     */
+    public function apiUpdateStatus(Request $request, $id)
+    {
+        // Chỉ cho phép admin thực hiện
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
+        }
+
+        $request->validate([
+            'status' => 'required|in:confirmed,completed,cancelled',
+        ]);
+
+        $booking = Booking::findOrFail($id);
+        $booking->update(['status' => $request->status]);
+
+        // Nếu hoàn thành hoặc hủy, có thể cập nhật lại trạng thái xe
+        if ($request->status === 'completed' || $request->status === 'cancelled') {
+            $booking->vehicle->update(['status' => 'available']);
+        } elseif ($request->status === 'confirmed') {
+            $booking->vehicle->update(['status' => 'rented']);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Cập nhật trạng thái đơn hàng thành công!',
+            'data' => $booking
+        ]);
+    }
+
+    /**
+     * API: Admin lấy danh sách tất cả đơn hàng
+     * Endpoint: GET /api/admin/bookings
+     */
+    public function apiAllBookings()
+    {
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Quyền truy cập bị từ chối.'], 403);
+        }
+
+        $bookings = Booking::with(['vehicle', 'user'])->latest()->get();
+        return response()->json(['data' => $bookings]);
+    }
 }
