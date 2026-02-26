@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: kthiuu_app
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - .env.docker
+    networks:
+      - kthiuu
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "pidof php-fpm || exit 1" ]
+      interval: 45s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: kthiuu_queue
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    env_file:
+      - .env.docker
+    networks:
+      - kthiuu
+    depends_on:
+      app:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    container_name: kthiuu_nginx
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    networks:
+      - kthiuu
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost/ || exit 1" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  mysql:
+    image: mysql:8.0
+    container_name: kthiuu_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kthiuu_hotel
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: kthiuu
+    ports:
+      - "3310:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - kthiuu
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: kthiuu_redis
+    restart: unless-stopped
+    ports:
+      - "6385:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - kthiuu
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: kthiuu_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: password
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8095:80"
+    networks:
+      - kthiuu
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: kthiuu_mailhog
+    restart: unless-stopped
+    ports:
+      - "1030:1025" # SMTP server
+      - "8030:8025" # Web UI
+    networks:
+      - kthiuu
+
+networks:
+  kthiuu:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
+  redisdata:
+    driver: local

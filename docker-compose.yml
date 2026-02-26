@@ -1,0 +1,203 @@
+version: '3.8'
+
+services:
+  # --- Thiuu Car Rental ---
+  thiuu_app:
+    build:
+      context: ./Thiuu
+      dockerfile: docker/php/Dockerfile
+    container_name: thiuu_app
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - ./Thiuu/.env.docker
+    volumes:
+      - ./Thiuu:/var/www
+    networks:
+      - thiuu_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "pidof php-fpm || exit 1" ]
+      interval: 45s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  thiuu_nginx:
+    build:
+      context: ./Thiuu
+      dockerfile: docker/nginx/Dockerfile
+    container_name: thiuu_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./Thiuu:/var/www
+    networks:
+      - thiuu_network
+    depends_on:
+      thiuu_app:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost/ || exit 1" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # --- KThiuu Hotel ---
+  hotel_app:
+    build:
+      context: ./KThiuu_Hotel
+      dockerfile: docker/php/Dockerfile
+    container_name: hotel_app
+    restart: unless-stopped
+    working_dir: /var/www
+    env_file:
+      - ./KThiuu_Hotel/.env.docker
+    volumes:
+      - ./KThiuu_Hotel:/var/www
+    networks:
+      - thiuu_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "pidof php-fpm || exit 1" ]
+      interval: 45s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+
+  hotel_nginx:
+    build:
+      context: ./KThiuu_Hotel
+      dockerfile: docker/nginx/Dockerfile
+    container_name: hotel_nginx
+    restart: unless-stopped
+    ports:
+      - "8001:80"
+    volumes:
+      - ./KThiuu_Hotel:/var/www
+    networks:
+      - thiuu_network
+    depends_on:
+      hotel_app:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost/ || exit 1" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # --- Shared Services ---
+
+  # Shared Auth Database (SSO)
+  shared_auth_db:
+    image: mysql:8.0
+    container_name: shared_auth_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: thiuu_auth
+      MYSQL_ROOT_PASSWORD: thiuu_secret
+      MYSQL_PASSWORD: thiuu_secret
+      MYSQL_USER: thiuu_auth
+    ports:
+      - "3308:3306"
+    volumes:
+      - shared_auth_data:/var/lib/mysql
+    networks:
+      - thiuu_network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pthiuu_secret" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mysql:
+    image: mysql:8.0
+    container_name: shared_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: laravel
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - thiuu_network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: shared_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - thiuu_network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: shared_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: password
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8089:80"
+    networks:
+      - thiuu_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: shared_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # UI
+    networks:
+      - thiuu_network
+
+networks:
+  thiuu_network:
+    driver: bridge
+
+volumes:
+  shared_auth_data:
+    driver: local
+  dbdata:
+    driver: local
+  redisdata:
+    driver: local
